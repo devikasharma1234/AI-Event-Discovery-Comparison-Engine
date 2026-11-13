@@ -15,3 +15,15 @@ export interface MatchedTicketListing {
   isDemo: boolean;
   totalCost: number;
 }
+
+export interface RecommendationFilters extends SearchFilters {
+  preferences?: string[];
+}
+
+export interface RecommendationScores {
+  budget: number;
+  rating: number;
+  preference: number;
+  date: number;
+  total: number;
+}

@@ -123,4 +123,49 @@ export const dummyEvents = [
       },
     ],
   },
+
+{
+  title: "Delhi Acoustic Sessions",
+  description:
+    "An intimate evening of acoustic music and emerging artists.",
+  category: "Music",
+  city: "Delhi",
+  venue: "Demo Acoustic Studio",
+  date: futureDate(9),
+  durationMinutes: 100,
+  minAge: 10,
+  imageUrl: "",
+  tags: ["acoustic", "indie", "live music"],
+  rating: 4.8,
+  ticketListings: [
+    {
+      platform: "DemoTickets",
+      price: 450,
+      bookingUrl: "https://example.com",
+      isDemo: true,
+    },
+  ],
+},
+{
+  title: "Delhi Classical Music Evening",
+  description:
+    "A classical instrumental music performance.",
+  category: "Music",
+  city: "Delhi",
+  venue: "Demo Cultural Centre",
+  date: futureDate(12),
+  durationMinutes: 120,
+  minAge: 8,
+  imageUrl: "",
+  tags: ["classical", "instrumental", "culture"],
+  rating: 4.9,
+  ticketListings: [
+    {
+      platform: "EventHub Demo",
+      price: 350,
+      bookingUrl: "https://example.com",
+      isDemo: true,
+    },
+  ],
+}
 ];

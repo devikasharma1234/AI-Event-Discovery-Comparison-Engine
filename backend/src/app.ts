@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import eventRoutes from "./routes/event.routes.js";
 import searchRoutes from "./routes/search.routes.js";
+import recommendationRoutes from "./routes/recommendation.routes.js";
 
 const app = express();
 
@@ -33,5 +34,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 app.use("/api/events", eventRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+
 
 export default app;
