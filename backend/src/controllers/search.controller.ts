@@ -101,17 +101,31 @@ export const fetchSearchResults = async (
       }
     }
 
+    
     const filters: SearchFilters = {
-      city: typeof city === "string" ? city.trim() : undefined,
-      category:
-        typeof category === "string"
-          ? category.trim()
-          : undefined,
-      budget: parsedBudget,
       people: parsedPeople,
-      age: parsedAge,
-      date: dateString,
+
+      ...(typeof city === "string" && {
+        city: city.trim(),
+      }),
+
+      ...(typeof category === "string" && {
+        category: category.trim(),
+      }),
+
+      ...(parsedBudget !== undefined && {
+        budget: parsedBudget,
+      }),
+
+      ...(parsedAge !== undefined && {
+        age: parsedAge,
+      }),
+
+      ...(dateString !== undefined && {
+        date: dateString,
+      }),
     };
+
 
     const results = await searchEvents(filters);
 

@@ -12,4 +12,4 @@ export const gemini = new GoogleGenAI({
 });
 
 export const GEMINI_MODEL =
-  process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
