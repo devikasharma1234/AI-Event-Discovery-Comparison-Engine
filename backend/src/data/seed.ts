@@ -8,13 +8,16 @@ const seedDatabase = async (): Promise<void> => {
   try {
     await connectDB();
 
-    // Clear old demo events before inserting fresh data
-    await Event.deleteMany({});
-
-    await Event.insertMany(dummyEvents);
+    await Event.bulkWrite(dummyEvents.map((event) => ({
+      updateOne: {
+        filter: { title: event.title, city: event.city, "ticketListings.isDemo": true },
+        update: { $set: event },
+        upsert: true,
+      },
+    })));
 
     console.log(
-      `${dummyEvents.length} dummy events inserted successfully`
+      `${dummyEvents.length} sample events refreshed`
     );
   } catch (error) {
     console.error("Database seeding failed:", error);

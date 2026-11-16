@@ -66,6 +66,7 @@ export const getRecommendations = async (
       ...event,
       recommendationScore: scores.total,
       scoreBreakdown: scores,
+      scoreWeights: WEIGHTS,
       explanation,
     };
   });
@@ -90,7 +91,7 @@ const generateExplanation = (
 
   if (filters.budget !== undefined) {
     reasons.push(
-      `Estimated group ticket cost is ₹${totalCost}, within your ₹${filters.budget} budget`
+      `The estimated group total is ₹${totalCost}, within your ₹${filters.budget} budget.`
     );
   }
 
@@ -98,22 +99,20 @@ const generateExplanation = (
     filters.preferences?.length &&
     scores.preference > 0
   ) {
-    reasons.push("Matches some of your event interests");
+    reasons.push("It matches some of your event interests.");
   }
 
   if (scores.rating >= 80) {
-    reasons.push("Has a high sample event rating");
+    reasons.push("It has a high sample event rating.");
   }
 
   if (scores.date >= 80) {
-    reasons.push("Is scheduled relatively soon");
+    reasons.push("It’s scheduled relatively soon.");
   }
 
   if (reasons.length === 0) {
     return `${title} satisfies your selected search constraints.`;
   }
 
-  return `${title} is recommended because it ${reasons.join(
-    ", "
-  )}.`;
+  return reasons.slice(0, 2).join(" ");
 };

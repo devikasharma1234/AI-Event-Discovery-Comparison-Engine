@@ -24,7 +24,7 @@ async function testGemini() {
 
   try {
     const response = await ai.models.generateContent({
-      model,
+      model: model!,
       contents: "Reply with exactly: Gemini is working",
     });
 

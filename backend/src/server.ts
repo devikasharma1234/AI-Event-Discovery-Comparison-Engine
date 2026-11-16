@@ -2,11 +2,11 @@ import "dotenv/config";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 8080;
 
 const startServer = async (): Promise<void> => {
   try {
-    await connectDB();
+    if (process.env.DEMO_MODE !== "true") await connectDB();
 
     app.listen(PORT, () => {
       console.log(

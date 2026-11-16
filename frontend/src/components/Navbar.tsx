@@ -1,44 +1,43 @@
+"use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Compass } from "lucide-react";
-import Image from "next/image";
+import { Bookmark, CircleUserRound, Compass, History, House, MapPin } from "lucide-react";
+import { cities } from "../lib/presentation";
 
-export default function Navbar() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0B1020]/90 backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl">
-            <Image
-            src="/assets/bee.png"
-            alt="PlanBee Logo"
-            width={50}
-            height={50}
-            className="h-20 w-20 object-contain"
-            />
-            {/* <Compass className="h-6 w-6 text-white" /> */}
-          </div>
+export default function Navbar({ city = "", onCity, onSaved, onHistory, savedCount = 0 }: {
+  city?: string;
+  onCity?: (city: string) => void;
+  onSaved?: () => void;
+  onHistory?: () => void;
+  savedCount?: number;
+}) {
+  const router = useRouter();
+  const options = city && !cities.includes(city) ? [...cities, city] : cities;
 
-          <span className="text-xl font-bold tracking-tight text-white">
-            Plan<span className="text-violet-400">Bee</span>
-          </span>
-        </Link>
-
-        <div className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
-          <Link href="/" className="hover:text-white">
-            Discover
-          </Link>
-
-          <a href="#recommendations" className="hover:text-white">
-            Recommendations
-          </a>
-        </div>
-
-        <div className="flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm text-violet-300">
-          <Sparkles size={16} />
-          AI Powered
-        </div>
-      </nav>
-    </header>
-  );
+  return <header className="site-header">
+    <nav className="shell navbar" aria-label="Main navigation">
+      <Link className="wordmark" href="/" aria-label="PlanBee home"><span className="brand-icon"><i className="bee-mark" aria-hidden="true" /></span>Plan<span>Bee</span></Link>
+      <div className="nav-links">
+        <Link href="/" aria-label="Home"><House size={17} /><span>Home</span></Link>
+        <Link href="/discover" aria-label="Discover"><Compass size={17} /><span>Discover</span></Link>
+        {onSaved && <button type="button" onClick={onSaved} aria-label={`Saved events (${savedCount})`}><Bookmark size={17} /><span>Saved</span></button>}
+        {onHistory && <button type="button" onClick={onHistory} aria-label="Search history"><History size={17} /><span>History</span></button>}
+      </div>
+      <div className="nav-actions">
+        <label className="city-picker">
+          <MapPin size={16} aria-hidden="true" />
+          <select aria-label="Select event city" value={city} onChange={(event) => {
+            const next = event.target.value;
+            if (onCity) onCity(next);
+            else router.push(next ? `/discover?city=${encodeURIComponent(next)}` : "/discover");
+          }}>
+            <option value="">All cities</option>
+            {options.map((option) => <option key={option}>{option}</option>)}
+          </select>
+        </label>
+        <Link className="profile-button" href="/profile" aria-label="Open profile"><CircleUserRound size={19} /><span>Profile</span></Link>
+      </div>
+    </nav>
+  </header>;
 }

@@ -1,8 +1,8 @@
 
 const futureDate = (daysFromNow: number): Date => {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
-  date.setHours(18, 0, 0, 0);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  const date = new Date(`${today}T18:00:00+05:30`);
+  date.setUTCDate(date.getUTCDate() + daysFromNow);
   return date;
 };
 
@@ -22,15 +22,11 @@ export const dummyEvents = [
     rating: 4.5,
     ticketListings: [
       {
-        platform: "DemoTickets",
-        price: 499,
-        bookingUrl: "https://example.com",
+        platform: "BookMyShow", price: 499, bookingUrl: "https://in.bookmyshow.com/",
         isDemo: true,
       },
       {
-        platform: "EventHub Demo",
-        price: 549,
-        bookingUrl: "https://example.com",
+        platform: "District", price: 549, bookingUrl: "https://www.district.in/",
         isDemo: true,
       },
     ],
@@ -50,9 +46,7 @@ export const dummyEvents = [
     rating: 4.3,
     ticketListings: [
       {
-        platform: "DemoTickets",
-        price: 399,
-        bookingUrl: "https://example.com",
+        platform: "BookMyShow", price: 399, bookingUrl: "https://in.bookmyshow.com/",
         isDemo: true,
       },
     ],
@@ -72,9 +66,7 @@ export const dummyEvents = [
     rating: 4.6,
     ticketListings: [
       {
-        platform: "CinemaDemo",
-        price: 250,
-        bookingUrl: "https://example.com",
+        platform: "BookMyShow", price: 250, bookingUrl: "https://in.bookmyshow.com/",
         isDemo: true,
       },
     ],
@@ -94,9 +86,7 @@ export const dummyEvents = [
     rating: 4.4,
     ticketListings: [
       {
-        platform: "FestivalDemo",
-        price: 299,
-        bookingUrl: "https://example.com",
+        platform: "District", price: 299, bookingUrl: "https://www.district.in/",
         isDemo: true,
       },
     ],
@@ -116,9 +106,7 @@ export const dummyEvents = [
     rating: 4.7,
     ticketListings: [
       {
-        platform: "DemoTickets",
-        price: 899,
-        bookingUrl: "https://example.com",
+        platform: "BookMyShow", price: 899, bookingUrl: "https://in.bookmyshow.com/",
         isDemo: true,
       },
     ],
@@ -139,9 +127,7 @@ export const dummyEvents = [
   rating: 4.8,
   ticketListings: [
     {
-      platform: "DemoTickets",
-      price: 450,
-      bookingUrl: "https://example.com",
+      platform: "BookMyShow", price: 450, bookingUrl: "https://in.bookmyshow.com/",
       isDemo: true,
     },
   ],
@@ -161,11 +147,99 @@ export const dummyEvents = [
   rating: 4.9,
   ticketListings: [
     {
-      platform: "EventHub Demo",
-      price: 350,
-      bookingUrl: "https://example.com",
+      platform: "District", price: 350, bookingUrl: "https://www.district.in/",
       isDemo: true,
     },
   ],
-}
+},
+{
+  title: "City Lights Cricket",
+  description: "A floodlit T20 exhibition with local clubs, a lively crowd, and food stalls.",
+  category: "Sports",
+  city: "Chandigarh",
+  venue: "Sector 16 Cricket Stadium",
+  date: futureDate(8),
+  durationMinutes: 180,
+  minAge: 0,
+  imageUrl: "",
+  tags: ["cricket", "sports", "family"],
+  rating: 4.6,
+  ticketListings: [{ platform: "BookMyShow", price: 325, bookingUrl: "https://in.bookmyshow.com/", isDemo: true }],
+},
+{
+  title: "Sunday Street Food Social",
+  description: "Try regional street food and watch live folk performances at an outdoor market.",
+  category: "Festival",
+  city: "Delhi",
+  venue: "Dilli Haat, INA",
+  date: futureDate(7 - futureDate(0).getUTCDay()),
+  durationMinutes: 160,
+  minAge: 0,
+  imageUrl: "",
+  tags: ["food", "family", "culture"],
+  rating: 4.7,
+  ticketListings: [
+    { platform: "BookMyShow", price: 300, bookingUrl: "https://in.bookmyshow.com/", isDemo: true },
+    { platform: "District", price: 350, bookingUrl: "https://www.district.in/", isDemo: true },
+  ],
+},
+{
+  title: "Open-Air Movie Club",
+  description: "Bring the family to an open-air screening of an animated feature.",
+  category: "Movies",
+  city: "Delhi",
+  venue: "Garden of Five Senses",
+  date: futureDate(7 - futureDate(0).getUTCDay() + 7),
+  durationMinutes: 110,
+  minAge: 0,
+  imageUrl: "",
+  tags: ["movies", "family", "outdoors"],
+  rating: 4.5,
+  ticketListings: [{ platform: "BookMyShow", price: 350, bookingUrl: "https://in.bookmyshow.com/", isDemo: true }],
+},
+  {
+    title: "Bengaluru After Hours Jazz",
+    description: "A small-room jazz concert with an opening set from a local instrumental trio.",
+    category: "Music", city: "Bengaluru", venue: "Indiranagar Arts Studio",
+    date: futureDate(6), durationMinutes: 110, minAge: 12, imageUrl: "",
+    tags: ["jazz", "live music", "concert"], rating: 4.7,
+    ticketListings: [{ platform: "District", price: 599, bookingUrl: "https://www.district.in/", isDemo: true }],
+  },
+  {
+    title: "Hyderabad Punchline Social",
+    description: "An evening of stand-up with a rotating lineup of Hyderabad comedians.",
+    category: "Comedy", city: "Hyderabad", venue: "Jubilee Hills Comedy Room",
+    date: futureDate(8), durationMinutes: 90, minAge: 16, imageUrl: "",
+    tags: ["comedy", "standup"], rating: 4.4,
+    ticketListings: [{ platform: "BookMyShow", price: 449, bookingUrl: "https://in.bookmyshow.com/", isDemo: true }],
+  },
+  {
+    title: "Jaipur Craft and Food Courtyard",
+    description: "Browse local crafts and Rajasthan street food alongside live folk music.",
+    category: "Festival", city: "Jaipur", venue: "Jawahar Kala Kendra Courtyard",
+    date: futureDate(9), durationMinutes: 180, minAge: 0, imageUrl: "",
+    tags: ["food", "culture", "family"], rating: 4.8,
+    ticketListings: [{ platform: "District", price: 275, bookingUrl: "https://www.district.in/", isDemo: true }],
+  },
+  {
+    title: "Chennai Stories on Screen",
+    description: "A family-friendly showcase of animated shorts followed by a filmmaker conversation.",
+    category: "Movies", city: "Chennai", venue: "Adyar Screening Room",
+    date: futureDate(11), durationMinutes: 100, minAge: 0, imageUrl: "",
+    tags: ["movies", "cinema", "family"], rating: 4.5,
+    ticketListings: [{ platform: "BookMyShow", price: 320, bookingUrl: "https://in.bookmyshow.com/", isDemo: true }],
+  },
+  {
+    title: "Kolkata Riverside Football Cup",
+    description: "Watch local clubs compete in an evening five-a-side football showcase.",
+    category: "Sports", city: "Kolkata", venue: "Maidan Community Ground",
+    date: futureDate(12), durationMinutes: 150, minAge: 0, imageUrl: "",
+    tags: ["sports", "football", "family"], rating: 4.6,
+    ticketListings: [{ platform: "District", price: 350, bookingUrl: "https://www.district.in/", isDemo: true }],
+  },
 ];
+
+export const demoCatalog = dummyEvents.map((event, index) => ({
+  ...event,
+  _id: (index + 1).toString(16).padStart(24, "0"),
+}));

@@ -1,11 +1,13 @@
 
 export interface SearchFilters {
-  city?: string;
-  category?: string;
-  budget?: number;
+  city?: string | undefined;
+  category?: string | undefined;
+  budget?: number | undefined;
   people: number;
-  age?: number;
-  date?: string;
+  children?: number | undefined;
+  age?: number | undefined;
+  date?: string | undefined;
+  endDate?: string | undefined;
 }
 
 export interface MatchedTicketListing {
@@ -17,7 +19,7 @@ export interface MatchedTicketListing {
 }
 
 export interface RecommendationFilters extends SearchFilters {
-  preferences?: string[];
+  preferences?: string[] | undefined;
 }
 
 export interface RecommendationScores {

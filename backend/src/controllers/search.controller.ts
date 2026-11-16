@@ -1,146 +1,33 @@
-
-import {type Request,type Response } from "express";
+﻿import type { Request, Response } from "express";
 import { searchEvents } from "../services/search.service.js";
-import {type SearchFilters } from "../types/search.types.js";
+import { conversationFiltersSchema } from "../utils/ai-validation.utils.js";
 
-const parseNumber = (
-  value: unknown
-): number | undefined => {
-  if (typeof value !== "string" || value.trim() === "") {
-    return undefined;
+function numericParameter(value: unknown): unknown {
+  if (typeof value !== "string" || !value.trim()) return value;
+  return Number(value);
+}
+
+export async function fetchSearchResults(req: Request, res: Response): Promise<void> {
+  const { city, category, budget, people, children, age, date, endDate } = req.query;
+  const input = conversationFiltersSchema.safeParse({
+    city, category, date, endDate,
+    people: numericParameter(people),
+    children: numericParameter(children),
+    budget: numericParameter(budget),
+    age: numericParameter(age),
+  });
+
+  if (!input.success) {
+    res.status(400).json({ success: false, message: "Check the city, dates, group size, budget, or age in your filters." });
+    return;
   }
 
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : undefined;
-};
-
-export const fetchSearchResults = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
   try {
-    const { city, category, budget, people, age, date } =
-      req.query;
-
-    const stringFields = [city, category, date];
-
-    if (
-      stringFields.some(
-        (value) =>
-          value !== undefined &&
-          (typeof value !== "string" || value.length > 100)
-      )
-    ) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid search parameters",
-      });
-      return;
-    }
-
-    const rawNumeric = [budget, people, age];
-
-    if (
-      rawNumeric.some(
-        (value) =>
-          value !== undefined &&
-          (typeof value !== "string" ||
-            value.trim() === "" ||
-            !Number.isFinite(Number(value)))
-      )
-    ) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid numeric parameters",
-      });
-      return;
-    }
-
-    const parsedPeople = parseNumber(people) ?? 1;
-    const parsedBudget = parseNumber(budget);
-    const parsedAge = parseNumber(age);
-
-    if (
-      !Number.isSafeInteger(parsedPeople) ||
-      parsedPeople < 1 ||
-      parsedPeople > 50 ||
-      (parsedBudget !== undefined &&
-        (parsedBudget < 0 || parsedBudget > 10000000)) ||
-      (parsedAge !== undefined &&
-        (!Number.isSafeInteger(parsedAge) ||
-          parsedAge < 0 ||
-          parsedAge > 120))
-    ) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid budget, people, or age",
-      });
-      return;
-    }
-
-    const dateString =
-      typeof date === "string" ? date : undefined;
-
-    if (dateString) {
-      const validFormat = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
-      const parsedDate = new Date(
-        `${dateString}T00:00:00.000Z`
-      );
-
-      if (
-        !validFormat ||
-        Number.isNaN(parsedDate.getTime()) ||
-        parsedDate.toISOString().slice(0, 10) !== dateString
-      ) {
-        res.status(400).json({
-          success: false,
-          message: "Date must be a valid YYYY-MM-DD date",
-        });
-        return;
-      }
-    }
-
-    
-    const filters: SearchFilters = {
-      people: parsedPeople,
-
-      ...(typeof city === "string" && {
-        city: city.trim(),
-      }),
-
-      ...(typeof category === "string" && {
-        category: category.trim(),
-      }),
-
-      ...(parsedBudget !== undefined && {
-        budget: parsedBudget,
-      }),
-
-      ...(parsedAge !== undefined && {
-        age: parsedAge,
-      }),
-
-      ...(dateString !== undefined && {
-        date: dateString,
-      }),
-    };
-
-
-    const results = await searchEvents(filters);
-
-    res.status(200).json({
-      success: true,
-      count: results.length,
-      filters,
-      events: results,
-    });
+    const filters = input.data;
+    const events = await searchEvents(filters);
+    res.json({ success: true, count: events.length, filters, events });
   } catch (error) {
     console.error("Search error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to search events",
-    });
+    res.status(503).json({ success: false, message: "Event search is temporarily unavailable." });
   }
-};
+}

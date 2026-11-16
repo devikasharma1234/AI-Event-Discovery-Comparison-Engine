@@ -13,6 +13,11 @@ export const mergeFilters = (
     ...previous,
   };
 
+  for (const key of updates.clear) {
+    delete merged[key];
+    if (key === "date") delete merged.endDate;
+  }
+
   if (updates.city !== null) {
     merged.city = updates.city;
   }
@@ -29,13 +34,21 @@ export const mergeFilters = (
     merged.people = updates.people;
   }
 
+  if (updates.children !== null) {
+    if (updates.children !== merged.children) delete merged.age;
+    merged.children = updates.children;
+  }
+
   if (updates.age !== null) {
     merged.age = updates.age;
   }
 
   if (updates.date !== null) {
     merged.date = updates.date;
+    delete merged.endDate;
   }
+
+  if (updates.endDate !== null) merged.endDate = updates.endDate;
 
   if (updates.preferences !== null) {
     merged.preferences = updates.preferences;

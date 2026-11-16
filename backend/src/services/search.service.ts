@@ -1,5 +1,6 @@
 import Event from "../models/event.model.js";
 import type { SearchFilters } from "../types/search.types.js";
+import { demoCatalog } from "../data/events.seed.js";
 
 export const searchEvents = async (
   filters: SearchFilters
@@ -9,15 +10,18 @@ export const searchEvents = async (
     category,
     budget,
     people,
-    age,
     date,
+    endDate,
   } = filters;
+  const age = filters.age ?? ((filters.children ?? 0) > 0 ? 0 : undefined);
 
   // Build MongoDB query
   const query: Record<string, unknown> = {};
 
   // Only upcoming events
-  query.date = { $gte: new Date() };
+  const now = new Date();
+  let start = now;
+  let end: Date | undefined;
 
   // Case-insensitive exact city match
   if (city) {
@@ -42,17 +46,26 @@ export const searchEvents = async (
 
   // Optional date filter
   if (date) {
-    const start = new Date(`${date}T00:00:00.000Z`);
-    const end = new Date(start);
+    const midnight = new Date(`${date}T00:00:00+05:30`);
+    start = new Date(Math.max(now.getTime(), midnight.getTime()));
+    end = new Date(`${endDate ?? date}T00:00:00+05:30`);
     end.setUTCDate(end.getUTCDate() + 1);
 
     query.date = {
-      $gte: start,
-      $lt: end,
+      $gte: start, $lt: end,
     };
+  } else {
+    query.date = { $gte: start };
   }
 
-  const events = await Event.find(query).lean();
+  const events = process.env.DEMO_MODE === "true"
+    ? demoCatalog.filter((event) =>
+      event.date >= start && (!end || event.date < end) &&
+      (!city || event.city.toLowerCase() === city.toLowerCase()) &&
+      (!category || event.category.toLowerCase() === category.toLowerCase()) &&
+      (age === undefined || event.minAge <= age)
+    )
+    : await Event.find(query).lean();
 
   const results = events.flatMap((event) => {
     const eligibleListings = event.ticketListings

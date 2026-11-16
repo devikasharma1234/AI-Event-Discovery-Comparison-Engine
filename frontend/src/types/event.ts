@@ -4,8 +4,10 @@ export interface SearchFilters {
   category?: string;
   budget?: number;
   people: number;
+  children?: number;
   age?: number;
   date?: string;
+  endDate?: string;
   preferences?: string[];
 }
 
@@ -42,6 +44,7 @@ export interface Event {
   cheapestTotalCost: number;
   recommendationScore: number;
   scoreBreakdown: ScoreBreakdown;
+  scoreWeights?: Omit<ScoreBreakdown, "total">;
   explanation: string;
 }
 
@@ -52,6 +55,7 @@ export interface AIChatResponse {
   extractedFilters?: Record<string, unknown>;
   activeFilters: SearchFilters;
   needsClarification?: boolean;
+  mode: "ai" | "basic";
   count: number;
   recommendations: Event[];
 }

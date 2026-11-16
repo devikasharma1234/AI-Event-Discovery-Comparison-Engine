@@ -1,100 +1,42 @@
-
-import {
-  CalendarDays,
-  MapPin,
-  Star,
-  Ticket,
-  Sparkles,
-} from "lucide-react";
-
+﻿import { ArrowUpRight, Bookmark, CalendarDays, GitCompareArrows, MapPin, Star } from "lucide-react";
 import type { Event } from "../types/event";
+import { categories, eventDate, money } from "../lib/presentation";
 
-interface EventCardProps {
+interface Props {
   event: Event;
+  saved: boolean;
+  compared: boolean;
+  compareFull: boolean;
+  isSearch: boolean;
+  onSave: () => void;
+  onCompare: () => void;
+  onOpen: () => void;
 }
 
-export default function EventCard({
-  event,
-}: EventCardProps) {
-  const date = new Date(event.date);
-
-  const formattedDate = Number.isNaN(date.getTime())
-    ? "Date unavailable"
-    : date.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
-
+export default function EventCard({ event, saved, compared, compareFull, isSearch, onSave, onCompare, onOpen }: Props) {
+  const art = categories.find((item) => item.value === event.category)?.art ?? "music";
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#111827] transition hover:border-violet-500/40">
-      <div className="relative flex h-44 items-center justify-center bg-gradient-to-br from-violet-900/50 to-slate-900">
-        <Ticket className="h-12 w-12 text-violet-400/60" />
-
-        <span className="absolute right-4 top-4 rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white">
-          {event.recommendationScore}% Match
-        </span>
+    <article className="event-card">
+      <div className={`event-photo art-${art}`} style={event.imageUrl?.startsWith("https://") ? { backgroundImage: `url("${event.imageUrl.replaceAll('"', '%22')}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+        <span className="event-category">{event.category}</span>
+        <button className="save-button" type="button" onClick={onSave} aria-pressed={saved} aria-label={saved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}>
+          <Bookmark size={18} fill={saved ? "currentColor" : "none"} />
+        </button>
       </div>
-
-      <div className="space-y-4 p-5">
-        <div>
-          <span className="text-xs font-medium uppercase tracking-wider text-violet-400">
-            {event.category}
-          </span>
-
-          <h3 className="mt-2 text-xl font-semibold text-white">
-            {event.title}
-          </h3>
-
-          <p className="mt-2 line-clamp-2 text-sm text-slate-400">
-            {event.description}
-          </p>
+      <div className="event-body">
+        <div className="event-meta">
+          <span><CalendarDays size={15} /> {eventDate(event.date)}</span>
+          <span aria-label={`Sample rating ${event.rating} out of 5`}><Star size={14} fill="currentColor" /> {event.rating.toFixed(1)}</span>
         </div>
-
-        <div className="space-y-2 text-sm text-slate-300">
-          <div className="flex items-center gap-2">
-            <CalendarDays size={16} className="text-violet-400" />
-            {formattedDate}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-violet-400" />
-            {event.venue}, {event.city}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Star size={16} className="text-amber-400" />
-            {event.rating}/5
-            <span className="text-xs text-slate-500">
-              (sample rating)
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-violet-300">
-            <Sparkles size={15} />
-            Why this event?
-          </div>
-
-          <p className="text-xs leading-relaxed text-slate-300">
-            {event.explanation}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-white/10 pt-4">
+        <h3><button type="button" onClick={onOpen}>{event.title}</button></h3>
+        <p className="event-venue"><MapPin size={15} /> {event.venue}, {event.city}</p>
+        {isSearch && <p className="event-match"><span>{event.recommendationScore}% match</span> {event.explanation}</p>}
+        <div className="event-bottom">
+          <p><small>{isSearch ? "Group total from" : "Tickets from"}</small><strong>{money(event.cheapestTotalCost)}</strong></p>
           <div>
-            <p className="text-xs text-slate-400">
-              Estimated group cost
-            </p>
-            <p className="text-xl font-bold text-white">
-              ₹{event.cheapestTotalCost.toLocaleString("en-IN")}
-            </p>
+            <button className="compare-button" title={compareFull && !compared ? "You can compare up to three events" : "Compare event"} aria-label={`Compare ${event.title}`} aria-pressed={compared} disabled={compareFull && !compared} type="button" onClick={onCompare}><GitCompareArrows size={17} /></button>
+            <button className="details-button" onClick={onOpen} type="button">Details <ArrowUpRight size={15} /></button>
           </div>
-
-          <span className="rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300">
-            Demo event
-          </span>
         </div>
       </div>
     </article>

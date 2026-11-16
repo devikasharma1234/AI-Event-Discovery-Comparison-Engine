@@ -1,153 +1,102 @@
+﻿"use client";
 
-"use client";
-
-import { useState, type FormEvent } from "react";
-import { Send, Sparkles, Loader2 } from "lucide-react";
-
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ArrowRight, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
 import { sendAIMessage } from "../lib/api";
+import type { Event, SearchFilters } from "../types/event";
 
-import type {
-  Event,
-  SearchFilters,
-} from "../types/event";
+const prompts = [
+  "Music in Delhi under ₹1,000",
+  "Comedy in Chandigarh",
+  "Family events this weekend",
+];
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
+export interface SearchEntry {
+  message: string;
+  filters?: SearchFilters;
+  awaitingAge: boolean;
 }
 
-interface AIChatProps {
-  onResults: (events: Event[]) => void;
-  onFiltersChange: (filters: SearchFilters) => void;
+interface Props {
+  onResults: (events: Event[], filters: SearchFilters, needsAge: boolean) => void;
+  onSearch: (entry: SearchEntry) => void;
+  onReset: () => void;
+  context?: SearchEntry;
 }
 
-export default function AIChat({
-  onResults,
-  onFiltersChange,
-}: AIChatProps) {
-  const [input, setInput] = useState("");
+export default function AIChat({ onResults, onSearch, onReset, context }: Props) {
+  const [input, setInput] = useState(context?.message ?? "");
+  const [filters, setFilters] = useState(context?.filters);
+  const [needsAge, setNeedsAge] = useState(context?.awaitingAge ?? false);
   const [loading, setLoading] = useState(false);
-  const [previousFilters, setPreviousFilters] =
-    useState<SearchFilters>();
+  const [turns, setTurns] = useState<{ query: string; reply: string; basic?: boolean }[]>([]);
+  const [error, setError] = useState("");
+  const request = useRef<AbortController | null>(null);
+  const log = useRef<HTMLDivElement>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content:
-        "Hi! Tell me what kind of events you're looking for. You can mention your city, budget, group size, and interests.",
-    },
-  ]);
+  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight; }, [turns]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    const message = input.trim();
-
-    if (!message || loading) return;
-
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: message },
-    ]);
-
-    setInput("");
+  async function search(raw: string) {
+    const message = raw.trim();
+    if (!message || request.current) return;
+    const controller = new AbortController();
+    request.current = controller;
     setLoading(true);
-
+    setError("");
     try {
-      const response = await sendAIMessage(
-        message,
-        previousFilters
-      );
-
-      setPreviousFilters(response.activeFilters);
-      onFiltersChange(response.activeFilters);
-
-      onResults(response.recommendations);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: response.reply,
-        },
-      ]);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Something went wrong";
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Sorry, ${errorMessage}. Please try again.`,
-        },
-      ]);
+      const response = await sendAIMessage(message, filters, needsAge, controller.signal);
+      if (controller.signal.aborted) return;
+      const awaitingAge = Boolean(response.needsClarification);
+      setTurns((old) => [...old, { query: message, reply: response.reply, basic: response.mode === "basic" }]);
+      setFilters(response.activeFilters);
+      setNeedsAge(awaitingAge);
+      setInput("");
+      onSearch({ message, filters, awaitingAge: needsAge });
+      onResults(response.recommendations, response.activeFilters, awaitingAge);
+    } catch (cause) {
+      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Search failed. Try again.");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        request.current = null;
+        setLoading(false);
+      }
     }
-  };
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void search(input);
+  }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111827] shadow-2xl">
-      <div className="flex items-center gap-3 border-b border-white/10 p-5">
-        <div className="rounded-xl bg-violet-600/20 p-3 text-violet-400">
-          <Sparkles size={22} />
-        </div>
-
-        <div>
-          <h2 className="font-semibold text-white">
-            AI Event Assistant
-          </h2>
-          <p className="text-xs text-slate-400">
-            Describe your perfect event
-          </p>
-        </div>
+    <section className="assistant" id="search" aria-labelledby="assistant-title">
+      <div className="assistant-heading">
+        <span className="assistant-icon"><Sparkles size={21} /></span>
+        <div><h2 id="assistant-title">Ask PlanBee</h2><p>Tell us where, when, and what you’re in the mood for.</p></div>
+        {(context || turns.length > 0) && <button className="subtle-button ml-auto" onClick={onReset} disabled={loading}><RotateCcw size={15} /> <span>New search</span></button>}
       </div>
-
-      <div className="flex h-80 flex-col gap-4 overflow-y-auto p-5">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-              message.role === "user"
-                ? "ml-auto bg-violet-600 text-white"
-                : "mr-auto bg-white/5 text-slate-200"
-            }`}
-          >
-            {message.content}
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-violet-300">
-            <Loader2 size={16} className="animate-spin" />
-            Finding the best events...
-          </div>
-        )}
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex gap-3 border-t border-white/10 p-4"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Find music events in Delhi under ₹2000..."
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-500"
-        />
-
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          className="flex items-center justify-center rounded-xl bg-violet-600 px-5 text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Send size={18} />
+      {turns.length > 0 && (
+        <div className="chat-log" role="log" aria-label="Conversation" ref={log}>
+          {turns.map((turn, index) => (
+            <div className="chat-turn" key={index}>
+              <p className="user-query">{turn.query}</p>
+              <p className="chat-reply">{turn.reply}{turn.basic && <small>Basic search</small>}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <form className="assistant-form" onSubmit={submit}>
+        <input id="event-query" aria-label="Describe the events you want to find" value={input} onChange={(event) => setInput(event.target.value)} maxLength={1000} placeholder={needsAge ? "Enter the youngest attendee’s age…" : "Try “Find concerts in Delhi under ₹1,500”"} />
+        <button className="primary-button" disabled={loading || !input.trim()} type="submit" aria-label={loading ? "Searching" : "Find events"}>
+          {loading ? <LoaderCircle className="animate-spin" size={17} /> : <ArrowRight size={18} />}
+          <span>{loading ? "Searching" : "Find events"}</span>
         </button>
       </form>
-    </div>
+      {error && <p className="inline-error" role="alert">{error}</p>}
+      {turns.length === 0 && !context && <div className="prompt-row" aria-label="Example searches">
+        {prompts.map((prompt) => <button key={prompt} type="button" disabled={loading} onClick={() => { setInput(prompt); document.getElementById("event-query")?.focus(); }}>{prompt}</button>)}
+      </div>}
+    </section>
   );
 }
