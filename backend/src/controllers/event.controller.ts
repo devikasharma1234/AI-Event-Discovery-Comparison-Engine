@@ -59,7 +59,8 @@ export const fetchEventById = async (
       return;
     }
 
-    const event = await getEventById(id);
+    const city = typeof req.query.city === "string" ? req.query.city : undefined;
+    const event = await getEventById(id, city);
 
     if (!event) {
       res.status(404).json({

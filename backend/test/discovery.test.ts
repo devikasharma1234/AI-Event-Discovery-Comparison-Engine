@@ -2,6 +2,71 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Request, Response } from "express";
 
+test("SerpApi listings power discovery and preserve unknown ticket details", async (context) => {
+  const previousDemo = process.env.DEMO_MODE;
+  const previousSource = process.env.EVENT_SOURCE;
+  const previousKey = process.env.SERPAPI_API_KEY;
+  delete process.env.DEMO_MODE;
+  delete process.env.EVENT_SOURCE;
+  process.env.SERPAPI_API_KEY = "fixture-key";
+  context.after(() => {
+    for (const [key, value] of Object.entries({
+      DEMO_MODE: previousDemo, EVENT_SOURCE: previousSource, SERPAPI_API_KEY: previousKey,
+    })) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+  context.mock.timers.enable({ apis: ["Date"], now: new Date("2026-11-16T09:00:00Z") });
+  const fetchMock = context.mock.method(globalThis, "fetch", async (input: string) => {
+    const query = new URL(input);
+    if (query.searchParams.get("engine") === "google_event_details") {
+      assert.equal(query.searchParams.get("event_token"), "fixture-token");
+      return Response.json({ event_details: {
+        description: "A jazz trio plays two sets.",
+        price: "From ₹499",
+        venue: { name: "Jazz Room" },
+        ticket_info: [{ source: "Organizer", link: "https://example.org/event", price: "₹499" }],
+      } });
+    }
+    assert.equal(query.searchParams.get("engine"), "google");
+    assert.equal(query.searchParams.get("device"), "mobile");
+    assert.equal(query.searchParams.get("location"), "Mumbai, India");
+    assert.match(query.searchParams.get("q") ?? "", /Mumbai/);
+    return Response.json({ events_results: [{
+      title: "Mumbai Jazz Concert",
+      event_token: "fixture-token",
+      date: { start_date: "Nov 22", when: "Nov 22, 2026" },
+      ticket_info: [{ source: "Organizer", link: "https://example.org/event" }],
+    }] });
+  });
+  const { searchEvents } = await import("../src/services/search.service.js");
+  const { normalizeLiveEvent } = await import("../src/services/live-event.service.js");
+  const mobile = normalizeLiveEvent(
+    { title: "An evening out", date: "18 Dec", type: "Live music", venue: "Community Hall" },
+    "Delhi", "2026-11-16"
+  );
+  assert.equal(mobile?.date.toISOString(), "2026-12-18T18:29:59.000Z");
+  assert.equal(mobile?.category, "Music");
+  assert.equal(mobile?.venue, "Community Hall");
+  const [event] = await searchEvents({ city: "Mumbai", category: "Music", people: 2 });
+  assert.equal(event?.title, "Mumbai Jazz Concert");
+  assert.equal(event?.cheapestTotalCost, 998);
+  assert.equal(event?.minAge, null);
+  assert.equal(event?.ticketListings[0]?.bookingUrl, "https://example.org/event");
+  const [withinBudget] = await searchEvents({ city: "Mumbai", budget: 1500, people: 2 });
+  assert.equal(withinBudget?.cheapestTotalCost, 998);
+  assert.deepEqual(await searchEvents({ city: "Mumbai", budget: 997, people: 2 }), []);
+  assert.deepEqual(await searchEvents({ city: "Mumbai", age: 8, people: 2 }), []);
+  assert.equal(fetchMock.mock.callCount(), 2);
+  const { getEventById } = await import("../src/services/event.service.js");
+  const enriched = await getEventById(event!._id.toString(), "Mumbai");
+  assert.equal(enriched?.description, "A jazz trio plays two sets.");
+  assert.equal(enriched?.ticketListings[0]?.price, 499);
+  await getEventById(event!._id.toString(), "Mumbai");
+  assert.equal(fetchMock.mock.callCount(), 2);
+});
+
 async function call(handler: (req: Request, res: Response) => Promise<void>, body: unknown) {
   let status = 200;
   let payload: Record<string, any> = {};

@@ -290,7 +290,7 @@ input::placeholder { color: #a196b2; opacity: 1; }
 }
 .home-hero .hero-art {
   inset: 0;
-  background: #211030 url("/assets/planbee-night-out.webp") center / cover no-repeat;
+  background: #211030 url("/assets/planbee-ticket-hero.webp") center / cover no-repeat;
 }
 .home-hero::after {
   background: linear-gradient(90deg, #1a0c2cf5, #1a0c2caf 35%, #1a0c2c20 64%, transparent);
@@ -363,3 +363,5 @@ body { background: radial-gradient(ellipse at 78% 0, #34204a 0%, transparent 60%
   color: var(--ink);
 }
 .catalog-page .page-intro p, .profile-page .page-intro p, .profile-page .page-intro > svg { color: #59346d; }
+
+.profile-auth-actions { margin-bottom: 16px; }

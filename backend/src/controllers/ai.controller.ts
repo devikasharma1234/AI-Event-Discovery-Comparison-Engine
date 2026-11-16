@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
 import { explainMatches, extractFilters } from "../services/ai.service.js";
 import { getRecommendations } from "../services/recommendation.service.js";
@@ -51,7 +51,7 @@ export async function handleAIChat(req: Request, res: Response): Promise<void> {
       ...common, count, recommendations: mode === "ai" ? await explainMatches(recommendations) : recommendations,
       reply: count
         ? `I found ${count} matching ${count === 1 ? "event" : "events"} for your plans.`
-        : "I couldn’t find a match in the sample catalog. Try widening your dates, changing the city, or raising the budget.",
+        : "I couldn’t find a match with verified details for those filters. Live listings with unknown prices or age limits are excluded when those details are required.",
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

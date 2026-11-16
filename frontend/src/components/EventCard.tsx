@@ -26,13 +26,15 @@ export default function EventCard({ event, saved, compared, compareFull, isSearc
       <div className="event-body">
         <div className="event-meta">
           <span><CalendarDays size={15} /> {eventDate(event.date)}</span>
-          <span aria-label={`Sample rating ${event.rating} out of 5`}><Star size={14} fill="currentColor" /> {event.rating.toFixed(1)}</span>
+          {event.rating !== null && <span aria-label={`Sample rating ${event.rating} out of 5`}><Star size={14} fill="currentColor" /> {event.rating.toFixed(1)}</span>}
         </div>
         <h3><button type="button" onClick={onOpen}>{event.title}</button></h3>
         <p className="event-venue"><MapPin size={15} /> {event.venue}, {event.city}</p>
         {isSearch && <p className="event-match"><span>{event.recommendationScore}% match</span> {event.explanation}</p>}
         <div className="event-bottom">
-          <p><small>{isSearch ? "Group total from" : "Tickets from"}</small><strong>{money(event.cheapestTotalCost)}</strong></p>
+          <p><small>{event.demoPrice !== undefined ? (isSearch ? "Estimated group total" : "Estimated ticket price") : event.cheapestTotalCost === null ? event.source : isSearch ? "Group total from" : "Tickets from"}</small><strong>{event.cheapestTotalCost === null
+            ? event.startingPrice === 0 ? "Free entry" : event.startingPrice != null ? `From ${money(event.startingPrice)}` : "Price not published"
+            : money(event.cheapestTotalCost)}</strong></p>
           <div>
             <button className="compare-button" title={compareFull && !compared ? "You can compare up to three events" : "Compare event"} aria-label={`Compare ${event.title}`} aria-pressed={compared} disabled={compareFull && !compared} type="button" onClick={onCompare}><GitCompareArrows size={17} /></button>
             <button className="details-button" onClick={onOpen} type="button">Details <ArrowUpRight size={15} /></button>

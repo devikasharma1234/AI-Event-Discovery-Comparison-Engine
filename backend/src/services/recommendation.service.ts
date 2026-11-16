@@ -28,11 +28,11 @@ export const getRecommendations = async (
 
   const recommendations = eligibleEvents.map((event) => {
     const budgetScore = calculateBudgetScore(
-      event.cheapestTotalCost,
+      event.cheapestTotalCost ?? 0,
       filters.budget
     );
 
-    const ratingScore = calculateRatingScore(event.rating);
+    const ratingScore = event.rating === null ? 50 : calculateRatingScore(event.rating);
 
     const preferenceScore = calculatePreferenceScore(
       event.tags,
@@ -59,7 +59,8 @@ export const getRecommendations = async (
       event.title,
       scores,
       event.cheapestTotalCost,
-      filters
+      filters,
+      "demoPrice" in event && typeof event.demoPrice === "number"
     );
 
     return {
@@ -75,7 +76,7 @@ export const getRecommendations = async (
   recommendations.sort(
     (a, b) =>
       b.recommendationScore - a.recommendationScore ||
-      a.cheapestTotalCost - b.cheapestTotalCost
+      (a.cheapestTotalCost ?? Infinity) - (b.cheapestTotalCost ?? Infinity)
   );
 
   return recommendations;
@@ -84,14 +85,15 @@ export const getRecommendations = async (
 const generateExplanation = (
   title: string,
   scores: RecommendationScores,
-  totalCost: number,
-  filters: RecommendationFilters
+  totalCost: number | null,
+  filters: RecommendationFilters,
+  demoPrice: boolean
 ): string => {
   const reasons: string[] = [];
 
-  if (filters.budget !== undefined) {
+  if (filters.budget !== undefined && totalCost !== null) {
     reasons.push(
-      `The estimated group total is ₹${totalCost}, within your ₹${filters.budget} budget.`
+      `The ${demoPrice ? "demo" : "estimated"} group total is ₹${totalCost}, within your ₹${filters.budget} budget.`
     );
   }
 

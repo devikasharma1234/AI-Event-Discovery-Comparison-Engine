@@ -9,7 +9,7 @@ import HeroSection from "./HeroSection";
 import EventResults from "./EventResults";
 import Footer from "./Footer";
 import Dialog from "./Dialog";
-import EventDetails, { TicketOptions } from "./EventDetails";
+import EventDetails, { startingTicketPrice, TicketOptions } from "./EventDetails";
 import { FilterForm } from "./SettingsForms";
 import { getRecommendations } from "../lib/api";
 import { eventDate, money } from "../lib/presentation";
@@ -212,11 +212,12 @@ function Discovery({ city, preferences, chat }: { city: string; preferences?: st
         <div className="comparison-grid">{compared.map((event) => <article key={event._id}>
           <h3>{event.title}</h3>
           <dl>
-            <dt>When</dt><dd>{eventDate(event.date, true)} IST</dd>
+            <dt>When</dt><dd>{eventDate(event.date, !event.dateOnly)}{event.dateOnly ? "" : " IST"}</dd>
             <dt>Where</dt><dd>{event.venue}, {event.city}</dd>
-            <dt>Age eligibility</dt><dd>{event.minAge ? `Ages ${event.minAge}+` : "All ages"}</dd>
-            <dt>Sample rating</dt><dd>{event.rating.toFixed(1)} / 5</dd>
-            <dt>From</dt><dd>{money(Math.min(...event.ticketListings.map((listing) => listing.price)))} per person</dd>
+            <dt>Age eligibility</dt><dd>{event.minAge === null ? "Unknown" : event.minAge ? `Ages ${event.minAge}+` : "All ages"}</dd>
+            <dt>Sample rating</dt><dd>{event.rating === null ? "Unavailable" : `${event.rating.toFixed(1)} / 5`}</dd>
+            <dt>Per person from</dt><dd>{startingTicketPrice(event) === null ? "Price not published" : money(startingTicketPrice(event)!)}{event.demoPrice !== undefined ? " · Demo estimate" : ""}</dd>
+            <dt>Search group total from</dt><dd>{event.cheapestTotalCost === null ? "Price not published" : money(event.cheapestTotalCost)}</dd>
           </dl>
           <TicketOptions event={{ ...event, ticketListings: event.ticketListings.map((listing) => ({ ...listing, totalCost: undefined })) }} />
         </article>)}</div>

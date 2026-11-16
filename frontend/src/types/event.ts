@@ -13,7 +13,8 @@ export interface SearchFilters {
 
 export interface TicketListing {
   platform: string;
-  price: number;
+  price: number | null;
+  officialListing?: boolean;
   bookingUrl: string;
   isDemo: boolean;
   totalCost?: number;
@@ -35,13 +36,20 @@ export interface Event {
   city: string;
   venue: string;
   date: string;
-  durationMinutes: number;
-  minAge: number;
+  durationMinutes: number | null;
+  minAge: number | null;
+  dateOnly?: boolean;
+  schedule?: string;
+  address?: string[];
+  startingPrice?: number | null;
+  demoPrice?: number;
+  detailsLoaded?: boolean;
+  source?: string;
   imageUrl: string;
   tags: string[];
-  rating: number;
+  rating: number | null;
   ticketListings: TicketListing[];
-  cheapestTotalCost: number;
+  cheapestTotalCost: number | null;
   recommendationScore: number;
   scoreBreakdown: ScoreBreakdown;
   scoreWeights?: Omit<ScoreBreakdown, "total">;

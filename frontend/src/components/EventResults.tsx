@@ -29,7 +29,7 @@ export default function EventResults(props: Props) {
       <div className="section-heading">
         <div>
           <h2 id="discover-title">{filters ? "Your recommendations" : "Explore upcoming events"}</h2>
-          <p>{awaitingAge ? "Answer the assistant’s question to see age-eligible events." : filters ? "Explore your matches and compare prices across platforms." : "Browse the sample catalog or narrow your search by city and category."}</p>
+          <p>{awaitingAge ? "Answer the assistant’s question to see age-eligible events." : filters ? "Explore your matches and check available ticket information." : "Browse the event catalog or narrow your search by city and category."}</p>
         </div>
         <button className="outline-button" onClick={props.onOpenFilters}><SlidersHorizontal size={16} /> Filters</button>
       </div>
@@ -49,14 +49,14 @@ export default function EventResults(props: Props) {
         <button onClick={props.onReset}>Clear search</button>
       </div>}
       <div className="results-status" aria-live="polite" aria-atomic="true">
-        {busy ? "Loading events…" : !error && !awaitingAge ? `${events.length} ${events.length === 1 ? "event" : "events"} · Sample catalog` : ""}
+        {busy ? "Loading events…" : !error && !awaitingAge ? `${events.length} ${events.length === 1 ? "event" : "events"}` : ""}
       </div>
       {busy ? <div className="event-grid" aria-hidden="true">{[1, 2, 3].map((index) => <div className="event-skeleton" key={index} />)}</div>
         : awaitingAge ? null
         : error || events.length === 0 ? <div className="empty-state">
           <SearchX size={28} />
           <h3>{error ? "Couldn’t load events" : "No matching events"}</h3>
-          <p>{error || "Try a different category, wider dates, or a higher group budget."}</p>
+          <p>{error || "Try different filters. Live listings with unknown prices or age limits are excluded when those details are required."}</p>
           <button className="outline-button" onClick={error ? props.onReset : props.onOpenFilters}>{error ? "Try again" : "Edit filters"}</button>
         </div> : <div className="event-grid">
           {events.map((event) => <EventCard key={event._id} event={event} isSearch={Boolean(filters)}

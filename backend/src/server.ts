@@ -1,12 +1,13 @@
 import "dotenv/config";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
+import { usesLiveEvents } from "./services/live-event.service.js";
 
 const PORT = Number(process.env.PORT) || 8080;
 
 const startServer = async (): Promise<void> => {
   try {
-    if (process.env.DEMO_MODE !== "true") await connectDB();
+    if (!usesLiveEvents() && process.env.DEMO_MODE !== "true") await connectDB();
 
     app.listen(PORT, () => {
       console.log(

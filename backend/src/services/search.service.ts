@@ -1,6 +1,7 @@
 import Event from "../models/event.model.js";
 import type { SearchFilters } from "../types/search.types.js";
 import { demoCatalog } from "../data/events.seed.js";
+import { enrichLiveEvent, getLiveEvents, usesLiveEvents } from "./live-event.service.js";
 
 export const searchEvents = async (
   filters: SearchFilters
@@ -56,6 +57,35 @@ export const searchEvents = async (
     };
   } else {
     query.date = { $gte: start };
+  }
+
+  if (usesLiveEvents()) {
+    if (age !== undefined) return [];
+    const live = await getLiveEvents(city);
+    const eligible = live.filter((event) => event.date >= start && (!end || event.date < end) &&
+      (!category || event.category.toLowerCase() === category.toLowerCase()));
+    const priced = [];
+    for (let offset = 0; offset < eligible.length; offset += 4) {
+      const batch = await Promise.all(eligible.slice(offset, offset + 4).map(async (event) => {
+        const details = await enrichLiveEvent(event).catch(() => event);
+        const ticketListings = details.ticketListings.map((listing) => ({
+          ...listing,
+          ...(listing.price !== null ? { totalCost: listing.price * people } : {}),
+        })).filter((listing) => budget === undefined || listing.totalCost === undefined || listing.totalCost <= budget);
+        const costs = ticketListings.flatMap((listing) => listing.totalCost === undefined ? [] : [listing.totalCost]);
+        const hasPublishedPrice = details.startingPrice != null || details.ticketListings.some(({ price }) => price !== null);
+        const demoPrice = hasPublishedPrice ? undefined : 250 + (parseInt(event._id.slice(0, 6), 16) % 16) * 50;
+        if (demoPrice !== undefined && (budget === undefined || demoPrice * people <= budget)) {
+          costs.push(demoPrice * people);
+        }
+        if (details.startingPrice != null && (budget === undefined || details.startingPrice * people <= budget)) {
+          costs.push(details.startingPrice * people);
+        }
+        return { ...details, ticketListings, demoPrice, cheapestTotalCost: costs.length ? Math.min(...costs) : null };
+      }));
+      priced.push(...batch.filter((event) => budget === undefined || event.cheapestTotalCost !== null));
+    }
+    return priced;
   }
 
   const events = process.env.DEMO_MODE === "true"
