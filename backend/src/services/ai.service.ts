@@ -33,6 +33,7 @@ export async function extractFilters(message: string, previous?: RecommendationF
         model: GEMINI_MODEL,
         contents: JSON.stringify({ previous, message }),
         config: {
+          abortSignal: AbortSignal.timeout(5000),
           systemInstruction: `Extract an update to an event search in India. Today is ${indianDate()}.
 Use null for fields unchanged. Put explicitly removed filters in clear.
 Budget is the maximum total group budget in INR. People is the total including children. Extract children when their count is given, or 0 if adults only. If only an adult count and child count are given, sum them for people.

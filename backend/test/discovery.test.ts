@@ -56,9 +56,13 @@ test("SerpApi listings power discovery and preserve unknown ticket details", asy
   assert.equal(event?.ticketListings[0]?.bookingUrl, "https://example.org/event");
   const [withinBudget] = await searchEvents({ city: "Mumbai", budget: 1500, people: 2 });
   assert.equal(withinBudget?.cheapestTotalCost, 998);
-  assert.deepEqual(await searchEvents({ city: "Mumbai", budget: 997, people: 2 }), []);
-  assert.deepEqual(await searchEvents({ city: "Mumbai", age: 8, people: 2 }), []);
+  assert.deepEqual(await searchEvents({ city: "Mumbai", category: "Music", budget: 997, people: 2 }), []);
+  assert.deepEqual(await searchEvents({ city: "Mumbai", category: "Music", age: 8, people: 2 }), []);
   assert.equal(fetchMock.mock.callCount(), 2);
+  const fallback = await searchEvents({ city: "Mumbai", category: "Movies", budget: 1000, people: 1 });
+  assert.ok(fallback.length > 0);
+  assert.ok(fallback.every((event) => "isSampleFallback" in event && event.isSampleFallback &&
+    event.category === "Movies" && event.cheapestTotalCost <= 1000));
   const { getEventById } = await import("../src/services/event.service.js");
   const enriched = await getEventById(event!._id.toString(), "Mumbai");
   assert.equal(enriched?.description, "A jazz trio plays two sets.");

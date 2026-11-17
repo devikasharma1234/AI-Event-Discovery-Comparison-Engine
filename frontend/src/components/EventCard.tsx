@@ -18,7 +18,7 @@ export default function EventCard({ event, saved, compared, compareFull, isSearc
   return (
     <article className="event-card">
       <div className={`event-photo art-${art}`} style={event.imageUrl?.startsWith("https://") ? { backgroundImage: `url("${event.imageUrl.replaceAll('"', '%22')}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
-        <span className="event-category">{event.category}</span>
+        <span className="event-category">{event.category}{event.isSampleFallback ? " · Sample event" : ""}</span>
         <button className="save-button" type="button" onClick={onSave} aria-pressed={saved} aria-label={saved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}>
           <Bookmark size={18} fill={saved ? "currentColor" : "none"} />
         </button>

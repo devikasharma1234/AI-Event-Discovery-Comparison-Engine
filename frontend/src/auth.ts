@@ -8,4 +8,5 @@ export const googleAuthConfigured = Boolean(
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: googleAuthConfigured ? [Google] : [],
   session: { strategy: "jwt" },
+  pages: { signIn: "/profile", error: "/profile" },
 });

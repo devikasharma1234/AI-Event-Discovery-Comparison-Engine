@@ -50,7 +50,9 @@ export async function handleAIChat(req: Request, res: Response): Promise<void> {
     res.json({
       ...common, count, recommendations: mode === "ai" ? await explainMatches(recommendations) : recommendations,
       reply: count
-        ? `I found ${count} matching ${count === 1 ? "event" : "events"} for your plans.`
+        ? recommendations.some((event) => "isSampleFallback" in event && event.isSampleFallback)
+          ? `I found ${count} matching sample ${count === 1 ? "event" : "events"}. No live matches are available for these filters.`
+          : `I found ${count} matching ${count === 1 ? "event" : "events"} for your plans.`
         : "I couldn’t find a match with verified details for those filters. Live listings with unknown prices or age limits are excluded when those details are required.",
     });
   } catch (error) {

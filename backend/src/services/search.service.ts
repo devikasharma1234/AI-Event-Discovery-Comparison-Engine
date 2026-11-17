@@ -59,9 +59,15 @@ export const searchEvents = async (
     query.date = { $gte: start };
   }
 
-  if (usesLiveEvents()) {
-    if (age !== undefined) return [];
-    const live = await getLiveEvents(city);
+  const liveMode = usesLiveEvents();
+  const targeted = city || category || budget !== undefined || date;
+  let liveError: unknown;
+  if (liveMode && age === undefined) {
+    const live = await getLiveEvents(city).catch((error: unknown) => {
+      if (!targeted) throw error;
+      liveError = error;
+      return [];
+    });
     const eligible = live.filter((event) => event.date >= start && (!end || event.date < end) &&
       (!category || event.category.toLowerCase() === category.toLowerCase()));
     const priced = [];
@@ -85,10 +91,10 @@ export const searchEvents = async (
       }));
       priced.push(...batch.filter((event) => budget === undefined || event.cheapestTotalCost !== null));
     }
-    return priced;
+    if (priced.length || !targeted) return priced;
   }
 
-  const events = process.env.DEMO_MODE === "true"
+  const events = liveMode || process.env.DEMO_MODE === "true"
     ? demoCatalog.filter((event) =>
       event.date >= start && (!end || event.date < end) &&
       (!city || event.city.toLowerCase() === city.toLowerCase()) &&
@@ -117,6 +123,7 @@ export const searchEvents = async (
     return [
       {
         ...event,
+        ...(liveMode ? { isSampleFallback: true } : {}),
         ticketListings: eligibleListings,
         cheapestTotalCost: eligibleListings[0]!.totalCost,
       },
@@ -127,6 +134,7 @@ export const searchEvents = async (
     (a, b) =>
       a.cheapestTotalCost - b.cheapestTotalCost
   );
+  if (!results.length && liveError) throw liveError;
 
   return results;
 };

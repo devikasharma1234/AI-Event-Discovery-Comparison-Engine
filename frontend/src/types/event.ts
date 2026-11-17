@@ -45,6 +45,7 @@ export interface Event {
   demoPrice?: number;
   detailsLoaded?: boolean;
   source?: string;
+  isSampleFallback?: boolean;
   imageUrl: string;
   tags: string[];
   rating: number | null;
